@@ -120,7 +120,7 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
     
     # set up graphics device and window for new plot
     graphics::plot.new()
-    graphics::plot.window(xlim = range(df$x_resid), ylim = range(df$lwr, df$upr))
+    graphics::plot.window(xlim = range(df$x_resid), ylim = range(df$lwr, df$upr, df$y_resid))
   
     # add background grid
     graphics::grid()
