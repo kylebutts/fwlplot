@@ -22,12 +22,13 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
   # )
 
   # Reset
-  fixest::setFixest_fml(..fwl_plot_FE = ~1, reset = TRUE)
-  fixest::setFixest_fml(..fwl_plot_x = ~1, reset = TRUE)
-  fixest::setFixest_fml(..fwl_plot_w = ~1, reset = TRUE)
-  fixest::setFixest_fml(..fwl_plot_y = ~1, reset = TRUE)
+  fixest::setFixest_fml(..fwl_plot_FE = ~1)
+  fixest::setFixest_fml(..fwl_plot_x = ~1)
+  fixest::setFixest_fml(..fwl_plot_w = ~1)
+  fixest::setFixest_fml(..fwl_plot_y = ~1)
 
   ## Process formula -----------------------------------------------------------
+  fml = fixest::xpd(fml)
   parts = get_fml_parts(fml)
 
   fixest::setFixest_fml(..fwl_plot_y = parts$y_fml)
