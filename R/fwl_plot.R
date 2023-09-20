@@ -51,6 +51,11 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
     fixest::setFixest_fml(..fwl_plot_x = covs[[1]])
   }
 
+  var_names <- c(
+    y = as.character(fixest::xpd(~..fwl_plot_y))[[2]],
+    x = as.character(fixest::xpd(~..fwl_plot_x))[[2]]
+  )
+
   ## Create formula ------------------------------------------------------------
   if (has_w & has_fe) {
     fml_new <- fixest::xpd(
@@ -70,7 +75,7 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
     )
   } else {
     fml_new <- fixest::xpd(
-      ..fwl_plot_y ~ 0 + ..fwl_plot_x
+      ..fwl_plot_y ~ 1 + ..fwl_plot_x
     )
     residualized_note <- "Raw scatter plot"
   }
@@ -93,27 +98,22 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
     )
     y_resid <- stats::resid(est[[1]], na.rm = FALSE)
     x_resid <- stats::resid(est[[2]], na.rm = FALSE)
-
   } else {
     pt_est <- fixest::feols(fml, data, notes = FALSE)
-
-    x_resid <- as.numeric(stats::model.matrix(pt_est, type = "rhs")[, 2])
+    x_resid <- as.numeric(stats::model.matrix(pt_est, type = "rhs")[, var_names["x"]])
     y_resid <- as.numeric(stats::model.matrix(pt_est, type = "lhs"))
   }
-  
+
   coef_note <- sprintf(
     "Coefficient: %0.3f (%0.3f)",
-    stats::coef(pt_est)[1], fixest::se(pt_est)[1]
+    stats::coef(pt_est)[var_names["x"]], 
+    fixest::se(pt_est)[var_names["x"]]
   )
-
+  
   ## Plot ----------------------------------------------------------------------
   df <- data.frame(
     `y_resid` = y_resid,
     `x_resid` = x_resid
-  )
-  var_names <- c(
-    y = as.character(fixest::xpd(~..fwl_plot_y))[[2]],
-    x = as.character(fixest::xpd(~..fwl_plot_x))[[2]]
   )
 
   if (ggplot == FALSE) {

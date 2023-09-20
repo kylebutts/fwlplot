@@ -26,7 +26,7 @@ Here’s a simple example with fixed effects removed by `fixest`.
 library(fwlplot)
 library(fixest)
 
-plot(mpg ~ hp, data = mtcars)
+fwl_plot(mpg ~ hp, data = mtcars)
 ```
 
 <img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
