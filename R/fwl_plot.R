@@ -53,55 +53,55 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
 
   ## Create formula ------------------------------------------------------------
   if (has_w & has_fe) {
-    fml <- fixest::xpd(
+    fml_new <- fixest::xpd(
       c(..fwl_plot_y, ..fwl_plot_x) ~ ..fwl_plot_w | ..fwl_plot_FE
     )
-    title <- paste(
+    residualized_note <-paste(
       "Residualized by ~",
       as.character(fixest::xpd(~ ..fwl_plot_w | ..fwl_plot_FE))[[2]]
     )
   } else if (has_w) {
-    fml <- fixest::xpd(
+    fml_new <- fixest::xpd(
       c(..fwl_plot_y, ..fwl_plot_x) ~ ..fwl_plot_w
     )
-    title <- paste(
-      "Residualized by ~ ",
+    residualized_note <- paste(
+      "Residualized by ~",
       as.character(fixest::xpd(~..fwl_plot_w))[[2]]
     )
   } else {
-    fml <- fixest::xpd(
+    fml_new <- fixest::xpd(
       ..fwl_plot_y ~ 0 + ..fwl_plot_x
     )
-    title <- "Raw scatter plot"
+    residualized_note <- "Raw scatter plot"
   }
+  
+  residualized_note <- strwrap(residualized_note, width = 80)
 
   ## Residualize ---------------------------------------------------------------
   should_run_reg <- has_w | has_fe
   if (should_run_reg) {
     est <- fixest::feols(
-      fml = fml,
+      fml = fml_new,
       data = data,
       notes = FALSE
     )
-
-    if (length(est[[1]]$obs_selection) > 0) {
-      y_resid <- numeric(length = nrow(data))
-      y_resid[est[[1]]$obs_selection[[1]]] <- est[[1]]$resid
-    } else {
-      y_resid <- est[[1]]$resid
-    }
-    if (length(est[[2]]$obs_selection) > 0) {
-      x_resid <- numeric(length = nrow(data))
-      x_resid[est[[2]]$obs_selection[[1]]] <- est[[2]]$resid
-    } else {
-      x_resid <- est[[2]]$resid
-    }
+    pt_est = fixest::feols(
+      fml = fml,
+      data = data,
+      notes = FALSE 
+    )
+    y_resid <- stats::resid(est[[1]], na.rm = FALSE)
+    x_resid <- stats::resid(est[[2]], na.rm = FALSE)
   } else {
-    est <- fixest::feols(fml, data, notes = FALSE)
-    x_resid <- as.numeric(stats::model.matrix(est, type = "rhs"))
-    y_resid <- as.numeric(stats::model.matrix(est, type = "lhs"))
+    pt_est <- fixest::feols(fml, data, notes = FALSE)
+    x_resid <- as.numeric(stats::model.matrix(pt_est, type = "rhs"))
+    y_resid <- as.numeric(stats::model.matrix(pt_est, type = "lhs"))
   }
-
+  
+  coef_note <- sprintf(
+    "Coefficient: %0.3f (%0.3f)",
+    stats::coef(pt_est)[1], fixest::se(pt_est)[1]
+  )
 
   ## Plot ----------------------------------------------------------------------
   df <- data.frame(
@@ -116,12 +116,16 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
   if (ggplot == FALSE) {
     
     df = df[order(df$x_resid), ]
+    df = df[complete.cases(df), ]
     pred = stats::predict(stats::lm(y_resid ~ x_resid, data = df), newdata = df, interval = "confidence") 
     df = cbind(df, pred)
     
     # set up graphics device and window for new plot
     graphics::plot.new()
-    graphics::plot.window(xlim = range(df$x_resid), ylim = range(df$lwr, df$upr, df$y_resid))
+    graphics::plot.window(
+      xlim = range(df$x_resid, na.rm = TRUE), 
+      ylim = range(df$lwr, df$upr, df$y_resid, na.rm = TRUE)
+    )
   
     # add background grid
     graphics::grid()
@@ -145,7 +149,8 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
     # plot frame: You might want to comment this out if you drop the axis lines
     box()
     
-    graphics::title(title, adj = 0)
+    graphics::title(main = coef_note, adj = 0)
+    graphics::title(sub = residualized_note, adj = 0)
     graphics::title(xlab = var_names[2], ylab = var_names[1])
     
     invisible(NULL)
@@ -164,7 +169,8 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
       ggplot2::labs(
         x = var_names["x"],
         y = var_names["y"],
-        title = title
+        title = coef_note, 
+        subtitle = residualized_note
       )
 
     return(plot)
