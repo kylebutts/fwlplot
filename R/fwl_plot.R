@@ -97,8 +97,8 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
     }
   } else {
     est <- fixest::feols(fml, data, notes = FALSE)
-    x_resid <- stats::model.matrix(est, type = "rhs")
-    y_resid <- stats::model.matrix(est, type = "lhs")
+    x_resid <- as.numeric(stats::model.matrix(est, type = "rhs"))
+    y_resid <- as.numeric(stats::model.matrix(est, type = "lhs"))
   }
 
 
