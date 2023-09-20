@@ -113,15 +113,40 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
   )
 
   if (ggplot == FALSE) {
-    graphics::plot(
-      x = x_resid, y = y_resid,
-      main = title, xlab = var_names["x"], ylab = var_names["y"]
+    
+    df = df[order(df$x_resid), ]
+    pred = stats::predict(stats::lm(y_resid ~ x_resid, data = df), newdata = df, interval = "confidence") 
+    df = cbind(df, pred)
+    
+    # set up graphics device and window for new plot
+    graphics::plot.new()
+    graphics::plot.window(xlim = range(df$x_resid), ylim = range(df$lwr, df$upr))
+  
+    # add background grid
+    graphics::grid()
+    
+    # residualized data points
+    graphics::points(
+	    x = df$x_resid, y = df$y_resid,
+	    pch = 19, col = grDevices::adjustcolor("black", 0.5),
     )
-    graphics::abline(
-      stats::lm(y_resid ~ x_resid, data = df),
-      lwd = 2, col = "blue"
+    
+    # best of fit line and CI
+    graphics::polygon(
+	    c(df$x_resid, rev(df$x_resid)), c(df$lwr, rev(df$upr)),
+	    col = grDevices::adjustcolor("gray", 0.3), border = NA
     )
-
+    graphics::lines(df$x_resid, y = df$fit, lwd = 2, col = "blue")
+    
+    # axes: Add 'col = NA' args if you just want the ticks labels with no lines
+    graphics::axis(1)
+    graphics::axis(2, las = 2) 
+    # plot frame: You might want to comment this out if you drop the axis lines
+    box()
+    
+    graphics::title(title, adj = 0)
+    graphics::title(xlab = var_names[2], ylab = var_names[1])
+    
     invisible(NULL)
 
   } else {
