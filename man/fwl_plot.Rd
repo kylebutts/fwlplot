@@ -2,9 +2,12 @@
 % Please edit documentation in R/fwl_plot.R
 \name{fwl_plot}
 \alias{fwl_plot}
+\alias{fwlplot}
 \title{FWL Plot}
 \usage{
 fwl_plot(fml, data, ggplot = FALSE)
+
+fwlplot(fml, data, ggplot = FALSE)
 }
 \arguments{
 \item{fml}{Of the form \code{y ~ x + covs | fes} following the fixest formula syntax. The x variable you want plotted should come first.}

@@ -45,7 +45,7 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
     fixest::setFixest_fml(..fwl_plot_x = covs[[n_covs]])
     fixest::setFixest_fml(
       ..fwl_plot_w =
-        paste(utils::head(covs, n_covs - 1), collapse = " + ")
+        paste(rev(utils::head(covs, n_covs - 1)), collapse = " + ")
     )
   } else {
     fixest::setFixest_fml(..fwl_plot_x = covs[[1]])
@@ -75,7 +75,8 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
     residualized_note <- "Raw scatter plot"
   }
   
-  residualized_note <- strwrap(residualized_note, width = 80)
+  # TODO: Is there a better way to specify width?
+  residualized_note <- strwrap(residualized_note, width = 60)
 
   ## Residualize ---------------------------------------------------------------
   should_run_reg <- has_w | has_fe
@@ -92,9 +93,11 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
     )
     y_resid <- stats::resid(est[[1]], na.rm = FALSE)
     x_resid <- stats::resid(est[[2]], na.rm = FALSE)
+
   } else {
     pt_est <- fixest::feols(fml, data, notes = FALSE)
-    x_resid <- as.numeric(stats::model.matrix(pt_est, type = "rhs"))
+
+    x_resid <- as.numeric(stats::model.matrix(pt_est, type = "rhs")[, 2])
     y_resid <- as.numeric(stats::model.matrix(pt_est, type = "lhs"))
   }
   
@@ -149,8 +152,8 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
     # plot frame: You might want to comment this out if you drop the axis lines
     box()
     
-    graphics::title(main = coef_note, adj = 0)
-    graphics::title(sub = residualized_note, adj = 0)
+    graphics::title(main = residualized_note, adj = 0)
+    graphics::title(sub = coef_note, adj = 0)
     graphics::title(xlab = var_names[2], ylab = var_names[1])
     
     invisible(NULL)
@@ -170,9 +173,13 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
         x = var_names["x"],
         y = var_names["y"],
         title = coef_note, 
-        subtitle = residualized_note
+        footnote = residualized_note
       )
 
     return(plot)
   }
 }
+
+#' @rdname fwl_plot
+#' @export
+fwlplot <- fwl_plot
