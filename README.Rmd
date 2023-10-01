@@ -37,8 +37,16 @@ library(fixest)
 
 fwl_plot(mpg ~ hp, data = mtcars)
 
-fwl_plot(mpg ~ hp + wt | cyl, data = mtcars)
+fwl_plot(mpg ~ hp + wt | cyl, data = mtcars, vcov = "hc1")
 ```
+
+This is meant to (as much as possible) be a drop in replacement for `fixest::feols`. You should be able to replace `feols` with `fwl_plot` and get a plot.
+
+```{r}
+fwl_plot(mpg ~ hp + wt | cyl, data = mtcars, vcov = ~cyl)
+fwl_plot(mpg ~ hp + wt, data = mtcars, subset = (mtcars$cyl == 4))
+```
+
 
 `ggplot` works too!
 

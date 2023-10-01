@@ -5,9 +5,9 @@
 \alias{fwlplot}
 \title{FWL Plot}
 \usage{
-fwl_plot(fml, data, ggplot = FALSE)
+fwl_plot(fml, data, ggplot = FALSE, ...)
 
-fwlplot(fml, data, ggplot = FALSE)
+fwlplot(fml, data, ggplot = FALSE, ...)
 }
 \arguments{
 \item{fml}{Of the form \code{y ~ x + covs | fes} following the fixest formula syntax. The x variable you want plotted should come first.}
@@ -15,6 +15,8 @@ fwlplot(fml, data, ggplot = FALSE)
 \item{data}{A \code{dataframe} object that contains the variables in \code{fml}.}
 
 \item{ggplot}{Boolean. Default is to use base R plot but if TRUE, use ggplot.}
+
+\item{...}{Additional arguments passed to \code{fixest::feols}.}
 }
 \value{
 Either NULL if \code{ggplot = FALSE} or a ggplot object if \code{ggplot = TRUE}.

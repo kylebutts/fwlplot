@@ -1,5 +1,3 @@
-# Copied from 
-
 #' Split formula into terms
 #' 
 #' @param formula Full formula following `fixest` syntax:
@@ -72,13 +70,6 @@ get_fml_parts <- function(formula, parts_as_formula = FALSE) {
   return(res)
 }
 
-# Makes `symbol`/`language` into rhs formula
-rhs_fml_maker <- function(rhs) {
-  res <- ~.
-  res[[2]] <- rhs
-  return(res)
-}
-
 #' Break apart formula (from right to left) based on a symbole (`~` or `|`)
 #'
 #' @param fml Formula following `fixest` syntax.
@@ -101,6 +92,12 @@ fml_breaker <- function(fml, op) {
   res
 }
 
+# Makes `symbol`/`language` into rhs formula
+rhs_fml_maker <- function(rhs) {
+  res <- ~.
+  res[[2]] <- rhs
+  return(res)
+}
 
 # Checks if formula is only rhs
 is_rhs_only <- function(fml) {

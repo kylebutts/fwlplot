@@ -5,7 +5,7 @@
 #' @param fml Of the form `y ~ x + covs | fes` following the fixest formula syntax. The x variable you want plotted should come first.
 #' @param data A `dataframe` object that contains the variables in `fml`.
 #' @param ggplot Boolean. Default is to use base R plot but if TRUE, use ggplot.
-#'
+#' @param ... Additional arguments passed to `fixest::feols`.
 #' @examples
 #' fwl_plot(mpg ~ hp + wt | cyl, mtcars)
 #'
@@ -16,10 +16,11 @@
 #' @return Either NULL if `ggplot = FALSE` or a ggplot object if `ggplot = TRUE`.
 #'
 #' @export
-fwl_plot <- function(fml, data, ggplot = FALSE) {
-  # main_est = feols(
-  #   fml, data, notes = FALSE,
-  # )
+fwl_plot <- function(fml, data, ggplot = FALSE, ...) {
+
+  pt_est = fixest::feols(
+    fml, data, notes = FALSE, ...
+  )
 
   # Reset
   fixest::setFixest_fml(..fwl_plot_FE = ~1)
@@ -61,27 +62,15 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
     fml_new <- fixest::xpd(
       c(..fwl_plot_y, ..fwl_plot_x) ~ ..fwl_plot_w | ..fwl_plot_FE
     )
-    residualized_note <-paste(
-      "Residualized by ~",
-      as.character(fixest::xpd(~ ..fwl_plot_w | ..fwl_plot_FE))[[2]]
-    )
   } else if (has_w) {
     fml_new <- fixest::xpd(
       c(..fwl_plot_y, ..fwl_plot_x) ~ ..fwl_plot_w
-    )
-    residualized_note <- paste(
-      "Residualized by ~",
-      as.character(fixest::xpd(~..fwl_plot_w))[[2]]
     )
   } else {
     fml_new <- fixest::xpd(
       ..fwl_plot_y ~ 1 + ..fwl_plot_x
     )
-    residualized_note <- "Raw scatter plot"
   }
-  
-  # TODO: Is there a better way to specify width?
-  residualized_note <- strwrap(residualized_note, width = 60)
 
   ## Residualize ---------------------------------------------------------------
   should_run_reg <- has_w | has_fe
@@ -89,17 +78,13 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
     est <- fixest::feols(
       fml = fml_new,
       data = data,
+      ...,
       notes = FALSE
     )
-    pt_est = fixest::feols(
-      fml = fml,
-      data = data,
-      notes = FALSE 
-    )
+
     y_resid <- stats::resid(est[[1]], na.rm = FALSE)
     x_resid <- stats::resid(est[[2]], na.rm = FALSE)
   } else {
-    pt_est <- fixest::feols(fml, data, notes = FALSE)
     x_resid <- as.numeric(stats::model.matrix(pt_est, type = "rhs")[, var_names["x"]])
     y_resid <- as.numeric(stats::model.matrix(pt_est, type = "lhs"))
   }
@@ -119,7 +104,7 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
   if (ggplot == FALSE) {
     
     df = df[order(df$x_resid), ]
-    df = df[complete.cases(df), ]
+    df = df[stats::complete.cases(df), ]
     pred = stats::predict(stats::lm(y_resid ~ x_resid, data = df), newdata = df, interval = "confidence") 
     df = cbind(df, pred)
     
@@ -144,16 +129,15 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
 	    c(df$x_resid, rev(df$x_resid)), c(df$lwr, rev(df$upr)),
 	    col = grDevices::adjustcolor("gray", 0.3), border = NA
     )
-    graphics::lines(df$x_resid, y = df$fit, lwd = 2, col = "blue")
+    graphics::lines(df$x_resid, y = df$fit, lwd = 2, col = "darkgreen")
     
     # axes: Add 'col = NA' args if you just want the ticks labels with no lines
     graphics::axis(1)
     graphics::axis(2, las = 2) 
     # plot frame: You might want to comment this out if you drop the axis lines
-    box()
+    graphics::box()
     
-    graphics::title(main = residualized_note, adj = 0)
-    graphics::title(sub = coef_note, adj = 0)
+    graphics::title(main = coef_note, adj = 0)
     graphics::title(xlab = var_names[2], ylab = var_names[1])
     
     invisible(NULL)
@@ -167,13 +151,12 @@ fwl_plot <- function(fml, data, ggplot = FALSE) {
       ggplot2::geom_smooth(
         formula = y ~ x,
         method = "lm",
-        color = "blue", linewidth = 1.2
+        color = "darkgreen", linewidth = 1.2
       ) +
       ggplot2::labs(
         x = var_names["x"],
         y = var_names["y"],
-        title = coef_note, 
-        footnote = residualized_note
+        title = coef_note
       )
 
     return(plot)
