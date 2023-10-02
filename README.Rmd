@@ -45,8 +45,10 @@ This is meant to (as much as possible) be a drop in replacement for `fixest::feo
 ```{r}
 fwl_plot(mpg ~ hp + wt | cyl, data = mtcars, vcov = ~cyl)
 fwl_plot(mpg ~ hp + wt, data = mtcars, subset = (mtcars$cyl == 4))
-```
 
+mtcars$w = runif(nrow(mtcars), 0.1, 0.9)
+fwl_plot(mpg ~ hp + wt, data = mtcars, weights = ~w)
+```
 
 `ggplot` works too!
 

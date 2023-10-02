@@ -8,11 +8,10 @@
 #' @param ... Additional arguments passed to `fixest::feols`.
 #' @examples
 #' fwl_plot(mpg ~ hp + wt | cyl, mtcars)
-#'
-#' library(ggplot2)
-#' fwl_plot(mpg ~ hp + wt | cyl, mtcars, ggplot = TRUE) +
-#'   theme_minimal()
-#'
+#' fwl_plot(mpg ~ hp + wt | cyl, mtcars, subset = (mtcars$cyl == 4))
+#' mtcars$w = runif(nrow(mtcars), 0.1, 0.9)
+#' fwl_plot(mpg ~ hp + wt | cyl, mtcars, w = ~ w)
+#' 
 #' @return Either NULL if `ggplot = FALSE` or a ggplot object if `ggplot = TRUE`.
 #'
 #' @export

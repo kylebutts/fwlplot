@@ -54,6 +54,14 @@ fwl_plot(mpg ~ hp + wt, data = mtcars, subset = (mtcars$cyl == 4))
 
 <img src="man/figures/README-unnamed-chunk-3-2.png" width="100%" />
 
+``` r
+
+mtcars$w = runif(nrow(mtcars), 0.1, 0.9)
+fwl_plot(mpg ~ hp + wt, data = mtcars, weights = ~w)
+```
+
+<img src="man/figures/README-unnamed-chunk-3-3.png" width="100%" />
+
 `ggplot` works too!
 
 ``` r
