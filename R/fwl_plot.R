@@ -7,9 +7,9 @@
 #' @param ggplot Boolean. Default is to use base R plot but if TRUE, use ggplot.
 #' @param ... Additional arguments passed to `fixest::feols`.
 #' @examples
-#' library(ggplot2)
-#' library(fwlplot)
-#' fwl_plot(mpg ~ hp + wt | cyl, mtcars, nthreads = 1)
+#' if (interactive()) {
+#'   fwl_plot(mpg ~ hp + wt | cyl, mtcars)
+#' }
 #' 
 #' @return Either NULL if `ggplot = FALSE` or a ggplot object if `ggplot = TRUE`.
 #'
