@@ -8,7 +8,8 @@
 #' @param ... Additional arguments passed to `fixest::feols`.
 #' @examples
 #' library(ggplot2)
-#' fwl_plot(mpg ~ hp + wt | cyl, mtcars, ggplot = TRUE)
+#' library(fwlplot)
+#' fwl_plot(mpg ~ hp + wt | cyl, mtcars, nthreads = 1)
 #' 
 #' @return Either NULL if `ggplot = FALSE` or a ggplot object if `ggplot = TRUE`.
 #'
