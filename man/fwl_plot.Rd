@@ -28,6 +28,6 @@ This function creates a bivariate plot of \code{y} and \code{x} after residualiz
 fwl_plot(mpg ~ hp + wt | cyl, mtcars)
 fwl_plot(mpg ~ hp + wt | cyl, mtcars, subset = (mtcars$cyl == 4))
 mtcars$w = runif(nrow(mtcars), 0.1, 0.9)
-fwl_plot(mpg ~ hp + wt | cyl, mtcars, w = ~ w)
+fwl_plot(mpg ~ hp + wt | cyl, mtcars, weights = ~ w)
 
 }
