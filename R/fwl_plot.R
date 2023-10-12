@@ -14,9 +14,7 @@
 #' @return Either NULL if `ggplot = FALSE` or a ggplot object if `ggplot = TRUE`.
 #'
 #' @export
-fwl_plot <- function(fml, data, ggplot = FALSE, ...) {
-  # Fix: "no visibile binding for global variable"
-  var = x_resid = y_resid = NULL
+fwl_plot <- function(fml, data, ggplot = TRUE, ...) {
 
   pt_est = fixest::feols(
     fml, data, notes = FALSE, ...
@@ -95,6 +93,27 @@ fwl_plot <- function(fml, data, ggplot = FALSE, ...) {
 
   ## Plot ----------------------------------------------------------------------
 
+  if (ggplot == FALSE) {
+    plot_resids_base_r(resids, x_var, y_vars, is_residualized = should_run_reg)
+    invisible(NULL)
+  } 
+  else {
+    plot <- plot_resids_ggplot(resids, x_var, y_vars, is_residualized = should_run_reg)
+    return(plot)
+  }
+
+}
+
+#' @rdname fwl_plot
+#' @export
+fwlplot <- fwl_plot
+
+plot_resids_ggplot <- function(resids, x_var, y_vars, is_residualized) {
+  # Fix: "no visibile binding for global variable"
+  var = x_resid = y_resid = NULL
+
+  # Setup stuff
+  has_multi_y = (nrow(resids) > 1)
   has_split = (resids[1, "sample"] != "")
   facet = NULL
   if (has_multi_y & has_split) {
@@ -118,7 +137,7 @@ fwl_plot <- function(fml, data, ggplot = FALSE, ...) {
   }
 
   y_label = NULL
-  if (should_run_reg) {
+  if (is_residualized) {
     if (has_multi_y) {
       y_label = NULL
       resids$var = paste0("Residualized ", resids$var)
@@ -133,23 +152,23 @@ fwl_plot <- function(fml, data, ggplot = FALSE, ...) {
     }
   }
 
-  if (should_run_reg) {
+  if (is_residualized) {
     x_label = paste0("Residualized ", x_var)
   } else {
     x_label = x_var
   }
   
-
+  # Plotting
   plot <- ggplot2::ggplot(
     resids,
     mapping = ggplot2::aes(x = x_resid, y = y_resid)
   ) + 
-    ggplot2::geom_point() +
     ggplot2::geom_smooth(
       formula = y ~ x,
       method = "lm",
       color = "darkgreen", linewidth = 1.2
     ) + 
+    ggplot2::geom_point() +
     facet +
     ggplot2::labs(
       x = x_label, 
@@ -157,75 +176,58 @@ fwl_plot <- function(fml, data, ggplot = FALSE, ...) {
     )
 
   return(plot)
-
-  # coef_note <- sprintf(
-  #   "Coefficient: %0.3f (%0.3f)",
-  #   stats::coef(pt_est)[var_names["x"]], 
-  #   fixest::se(pt_est)[var_names["x"]]
-  # )
-
-  # if (ggplot == FALSE) {
-    
-  #   df = df[order(df$x_resid), ]
-  #   df = df[stats::complete.cases(df), ]
-  #   pred = stats::predict(stats::lm(y_resid ~ x_resid, data = df), newdata = df, interval = "confidence") 
-  #   df = cbind(df, pred)
-    
-  #   # set up graphics device and window for new plot
-  #   graphics::plot.new()
-  #   graphics::plot.window(
-  #     xlim = range(df$x_resid, na.rm = TRUE), 
-  #     ylim = range(df$lwr, df$upr, df$y_resid, na.rm = TRUE)
-  #   )
-  
-  #   # add background grid
-  #   graphics::grid()
-    
-  #   # residualized data points
-  #   graphics::points(
-	#     x = df$x_resid, y = df$y_resid,
-	#     pch = 19, col = grDevices::adjustcolor("black", 0.5),
-  #   )
-    
-  #   # best of fit line and CI
-  #   graphics::polygon(
-	#     c(df$x_resid, rev(df$x_resid)), c(df$lwr, rev(df$upr)),
-	#     col = grDevices::adjustcolor("gray", 0.3), border = NA
-  #   )
-  #   graphics::lines(df$x_resid, y = df$fit, lwd = 2, col = "darkgreen")
-    
-  #   # axes: Add 'col = NA' args if you just want the ticks labels with no lines
-  #   graphics::axis(1)
-  #   graphics::axis(2, las = 2) 
-  #   # plot frame: You might want to comment this out if you drop the axis lines
-  #   graphics::box()
-    
-  #   graphics::title(main = coef_note, adj = 0)
-  #   graphics::title(xlab = var_names[2], ylab = var_names[1])
-    
-  #   invisible(NULL)
-
-  # } else {
-  #   plot <- ggplot2::ggplot(
-  #     df,
-  #     mapping = ggplot2::aes(x = x_resid, y = y_resid)
-  #   ) +
-  #     ggplot2::geom_point() +
-  #     ggplot2::geom_smooth(
-  #       formula = y ~ x,
-  #       method = "lm",
-  #       color = "darkgreen", linewidth = 1.2
-  #     ) +
-  #     ggplot2::labs(
-  #       x = var_names["x"],
-  #       y = var_names["y"],
-  #       title = coef_note
-  #     )
-
-  #   return(plot)
-  # }
 }
 
-#' @rdname fwl_plot
-#' @export
-fwlplot <- fwl_plot
+plot_resids_base_r <- function(resids, x_var, y_vars, is_residualized) {
+
+  # Need to `split` by = c("sample", "var")
+  # Then `lapply` over each element of the list
+  resids_fitted = lapply(
+    split(resids, interaction(resids$sample, resids$var)), 
+    function(data) {
+      data = data[order(data$x_resid)]
+      data = data[stats::complete.cases(data), ]
+      pred = stats::predict(
+        stats::lm(y_resid ~ x_resid, data = data), 
+        newdata = data, interval = "confidence"
+      ) 
+      cbind(data, pred)
+    }
+  )
+
+  # df = data.table::rbindlist(resids_fitted)
+  df = resids_fitted[[1]]
+  
+  # set up graphics device and window for new plot
+  graphics::plot.new()
+  graphics::plot.window(
+    xlim = range(df$x_resid, na.rm = TRUE), 
+    ylim = range(df$lwr, df$upr, df$y_resid, na.rm = TRUE)
+  )
+
+  # add background grid
+  graphics::grid()
+  
+  # residualized data points
+  graphics::points(
+    x = df$x_resid, y = df$y_resid,
+    pch = 19, col = grDevices::adjustcolor("black", 0.5),
+  )
+  
+  # best of fit line and CI
+  graphics::polygon(
+    c(df$x_resid, rev(df$x_resid)), c(df$lwr, rev(df$upr)),
+    col = grDevices::adjustcolor("gray", 0.3), border = NA
+  )
+  graphics::lines(df$x_resid, y = df$fit, lwd = 2, col = "darkgreen")
+  
+  # axes: Add 'col = NA' args if you just want the ticks labels with no lines
+  graphics::axis(1)
+  graphics::axis(2, las = 2) 
+  # plot frame: You might want to comment this out if you drop the axis lines
+  graphics::box()
+  
+  graphics::title(main = coef_note, adj = 0)
+  graphics::title(xlab = var_names[2], ylab = var_names[1])
+}
+
