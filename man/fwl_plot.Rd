@@ -25,9 +25,8 @@ Either NULL if \code{ggplot = FALSE} or a ggplot object if \code{ggplot = TRUE}.
 This function creates a bivariate plot of \code{y} and \code{x} after residualizing over a set of covariates \code{w}.
 }
 \examples{
-fwl_plot(mpg ~ hp + wt | cyl, mtcars)
-fwl_plot(mpg ~ hp + wt | cyl, mtcars, subset = (mtcars$cyl == 4))
-mtcars$w = runif(nrow(mtcars), 0.1, 0.9)
-fwl_plot(mpg ~ hp + wt | cyl, mtcars, weights = ~ w)
+if (interactive()) {
+  fwl_plot(mpg ~ hp + wt | cyl, mtcars)
+}
 
 }

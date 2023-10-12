@@ -15,6 +15,8 @@
 #'
 #' @export
 fwl_plot <- function(fml, data, ggplot = FALSE, ...) {
+  # Fix: "no visibile binding for global variable"
+  var = x_resid = y_resid = NULL
 
   pt_est = fixest::feols(
     fml, data, notes = FALSE, ...
@@ -29,8 +31,6 @@ fwl_plot <- function(fml, data, ggplot = FALSE, ...) {
   ## Process formula -----------------------------------------------------------
   fml = fixest::xpd(fml)
   parts = get_fml_parts(fml)
-
-  fixest::setFixest_fml(..fwl_plot_y = parts$y_fml)
   
   has_fe = !is.null(parts$W_FE)
   if (has_fe == TRUE) {
@@ -50,23 +50,32 @@ fwl_plot <- function(fml, data, ggplot = FALSE, ...) {
     fixest::setFixest_fml(..fwl_plot_x = covs[[1]])
   }
 
-  var_names <- c(
-    y = as.character(fixest::xpd(~..fwl_plot_y))[[2]],
-    x = as.character(fixest::xpd(~..fwl_plot_x))[[2]]
+  x_var = deparse(fixest::xpd(~..fwl_plot_x)[[2]])
+
+  # Process multiple y vars
+  y_vars = rev(fml_breaker(parts$y_fml, "c"))
+  has_multi_y = (length(y_vars) > 1)
+  y_vars = unlist(lapply(y_vars, deparse))
+  
+  outcome_fml = paste0("c(",
+    paste(c(y_vars, x_var), collapse = ", "), 
+    ")"
   )
+  fixest::setFixest_fml(..fwl_plot_outcomes = outcome_fml)
+
 
   ## Create formula ------------------------------------------------------------
   if (has_w & has_fe) {
     fml_new <- fixest::xpd(
-      c(..fwl_plot_y, ..fwl_plot_x) ~ ..fwl_plot_w | ..fwl_plot_FE
+      ..fwl_plot_outcomes ~ ..fwl_plot_w | ..fwl_plot_FE
     )
   } else if (has_w) {
     fml_new <- fixest::xpd(
-      c(..fwl_plot_y, ..fwl_plot_x) ~ ..fwl_plot_w
+      ..fwl_plot_outcomes ~ ..fwl_plot_w
     )
   } else {
     fml_new <- fixest::xpd(
-      ..fwl_plot_y ~ 1 + ..fwl_plot_x
+      ..fwl_plot_outcomes ~ 0
     )
   }
 
@@ -79,86 +88,142 @@ fwl_plot <- function(fml, data, ggplot = FALSE, ...) {
       ...,
       notes = FALSE
     )
-
-    y_resid <- stats::resid(est[[1]], na.rm = FALSE)
-    x_resid <- stats::resid(est[[2]], na.rm = FALSE)
+    resids = get_resids(est, x_var)
   } else {
-    x_resid <- as.numeric(stats::model.matrix(pt_est, type = "rhs")[, var_names["x"]])
-    y_resid <- as.numeric(stats::model.matrix(pt_est, type = "lhs"))
+    resids = get_resids_no_cov(pt_est, x_var)
   }
 
-  coef_note <- sprintf(
-    "Coefficient: %0.3f (%0.3f)",
-    stats::coef(pt_est)[var_names["x"]], 
-    fixest::se(pt_est)[var_names["x"]]
-  )
-  
   ## Plot ----------------------------------------------------------------------
-  df <- data.frame(
-    `y_resid` = y_resid,
-    `x_resid` = x_resid
-  )
 
-  if (ggplot == FALSE) {
-    
-    df = df[order(df$x_resid), ]
-    df = df[stats::complete.cases(df), ]
-    pred = stats::predict(stats::lm(y_resid ~ x_resid, data = df), newdata = df, interval = "confidence") 
-    df = cbind(df, pred)
-    
-    # set up graphics device and window for new plot
-    graphics::plot.new()
-    graphics::plot.window(
-      xlim = range(df$x_resid, na.rm = TRUE), 
-      ylim = range(df$lwr, df$upr, df$y_resid, na.rm = TRUE)
+  has_split = (resids[1, "sample"] != "")
+  facet = NULL
+  if (has_multi_y & has_split) {
+    facet <- ggplot2::facet_grid(
+      rows = ggplot2::vars(var),
+      cols = ggplot2::vars(sample),
+      scales = "free_y"
     )
-  
-    # add background grid
-    graphics::grid()
-    
-    # residualized data points
-    graphics::points(
-	    x = df$x_resid, y = df$y_resid,
-	    pch = 19, col = grDevices::adjustcolor("black", 0.5),
-    )
-    
-    # best of fit line and CI
-    graphics::polygon(
-	    c(df$x_resid, rev(df$x_resid)), c(df$lwr, rev(df$upr)),
-	    col = grDevices::adjustcolor("gray", 0.3), border = NA
-    )
-    graphics::lines(df$x_resid, y = df$fit, lwd = 2, col = "darkgreen")
-    
-    # axes: Add 'col = NA' args if you just want the ticks labels with no lines
-    graphics::axis(1)
-    graphics::axis(2, las = 2) 
-    # plot frame: You might want to comment this out if you drop the axis lines
-    graphics::box()
-    
-    graphics::title(main = coef_note, adj = 0)
-    graphics::title(xlab = var_names[2], ylab = var_names[1])
-    
-    invisible(NULL)
-
-  } else {
-    plot <- ggplot2::ggplot(
-      df,
-      mapping = ggplot2::aes(x = x_resid, y = y_resid)
-    ) +
-      ggplot2::geom_point() +
-      ggplot2::geom_smooth(
-        formula = y ~ x,
-        method = "lm",
-        color = "darkgreen", linewidth = 1.2
-      ) +
-      ggplot2::labs(
-        x = var_names["x"],
-        y = var_names["y"],
-        title = coef_note
-      )
-
-    return(plot)
   }
+  if (has_multi_y & !has_split) {
+    facet <- ggplot2::facet_wrap(
+      ggplot2::vars(var),
+      scales = "free"
+    )
+  }
+  if (!has_multi_y & has_split) {
+    facet <- ggplot2::facet_wrap(
+      ggplot2::vars(sample),
+      scales = "fixed"
+    )
+  }
+
+  y_label = NULL
+  if (should_run_reg) {
+    if (has_multi_y) {
+      y_label = NULL
+      resids$var = paste0("Residualized ", resids$var)
+    } else {
+      y_label = paste0("Residualized ", y_vars[1])
+    }
+  } else {
+    if (has_multi_y) {
+      y_label = NULL
+    } else {
+      y_label = y_vars[1]
+    }
+  }
+
+  if (should_run_reg) {
+    x_label = paste0("Residualized ", x_var)
+  } else {
+    x_label = x_var
+  }
+  
+
+  plot <- ggplot2::ggplot(
+    resids,
+    mapping = ggplot2::aes(x = x_resid, y = y_resid)
+  ) + 
+    ggplot2::geom_point() +
+    ggplot2::geom_smooth(
+      formula = y ~ x,
+      method = "lm",
+      color = "darkgreen", linewidth = 1.2
+    ) + 
+    facet +
+    ggplot2::labs(
+      x = x_label, 
+      y = y_label
+    )
+
+  return(plot)
+
+  # coef_note <- sprintf(
+  #   "Coefficient: %0.3f (%0.3f)",
+  #   stats::coef(pt_est)[var_names["x"]], 
+  #   fixest::se(pt_est)[var_names["x"]]
+  # )
+
+  # if (ggplot == FALSE) {
+    
+  #   df = df[order(df$x_resid), ]
+  #   df = df[stats::complete.cases(df), ]
+  #   pred = stats::predict(stats::lm(y_resid ~ x_resid, data = df), newdata = df, interval = "confidence") 
+  #   df = cbind(df, pred)
+    
+  #   # set up graphics device and window for new plot
+  #   graphics::plot.new()
+  #   graphics::plot.window(
+  #     xlim = range(df$x_resid, na.rm = TRUE), 
+  #     ylim = range(df$lwr, df$upr, df$y_resid, na.rm = TRUE)
+  #   )
+  
+  #   # add background grid
+  #   graphics::grid()
+    
+  #   # residualized data points
+  #   graphics::points(
+	#     x = df$x_resid, y = df$y_resid,
+	#     pch = 19, col = grDevices::adjustcolor("black", 0.5),
+  #   )
+    
+  #   # best of fit line and CI
+  #   graphics::polygon(
+	#     c(df$x_resid, rev(df$x_resid)), c(df$lwr, rev(df$upr)),
+	#     col = grDevices::adjustcolor("gray", 0.3), border = NA
+  #   )
+  #   graphics::lines(df$x_resid, y = df$fit, lwd = 2, col = "darkgreen")
+    
+  #   # axes: Add 'col = NA' args if you just want the ticks labels with no lines
+  #   graphics::axis(1)
+  #   graphics::axis(2, las = 2) 
+  #   # plot frame: You might want to comment this out if you drop the axis lines
+  #   graphics::box()
+    
+  #   graphics::title(main = coef_note, adj = 0)
+  #   graphics::title(xlab = var_names[2], ylab = var_names[1])
+    
+  #   invisible(NULL)
+
+  # } else {
+  #   plot <- ggplot2::ggplot(
+  #     df,
+  #     mapping = ggplot2::aes(x = x_resid, y = y_resid)
+  #   ) +
+  #     ggplot2::geom_point() +
+  #     ggplot2::geom_smooth(
+  #       formula = y ~ x,
+  #       method = "lm",
+  #       color = "darkgreen", linewidth = 1.2
+  #     ) +
+  #     ggplot2::labs(
+  #       x = var_names["x"],
+  #       y = var_names["y"],
+  #       title = coef_note
+  #     )
+
+  #   return(plot)
+  # }
 }
 
 #' @rdname fwl_plot
