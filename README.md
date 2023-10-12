@@ -25,6 +25,8 @@ Here’s a simple example with fixed effects removed by `fixest`.
 ``` r
 library(fwlplot)
 library(fixest)
+library(ggplot2)
+theme_set(theme_minimal(base_size = 16))
 
 fwl_plot(mpg ~ hp, data = mtcars)
 ```
@@ -42,50 +44,38 @@ This is meant to (as much as possible) be a drop in replacement for
 and get a plot.
 
 ``` r
-library(ggplot2)
-theme_set(theme_minimal(base_size = 16))
-
-fwl_plot(mpg ~ wt, mtcars)
+# Fixest multi support
+fwl_plot(c(mpg, disp) ~ wt + hp, mtcars)
 ```
 
 <img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
 
 ``` r
-fwl_plot(mpg ~ wt + hp | cyl, mtcars)
+fwl_plot(c(mpg, disp) ~ wt + hp, mtcars, split = ~cyl)
 ```
 
 <img src="man/figures/README-unnamed-chunk-3-2.png" width="100%" />
 
 ``` r
-fwl_plot(c(mpg, disp) ~ wt + hp, mtcars)
+fwl_plot(c(mpg, disp) ~ wt, mtcars, fsplit = ~cyl)
 ```
 
 <img src="man/figures/README-unnamed-chunk-3-3.png" width="100%" />
 
 ``` r
-fwl_plot(c(mpg, disp) ~ wt + hp, mtcars, split = ~cyl)
+
+# Using subset
+mtcars$sample = as.logical(mtcars$gear == 4)
+fwl_plot(c(mpg, disp) ~ wt, mtcars, subset = ~sample)
 ```
 
 <img src="man/figures/README-unnamed-chunk-3-4.png" width="100%" />
 
 ``` r
-fwl_plot(c(mpg, disp) ~ wt, mtcars, fsplit = ~cyl)
-```
 
-<img src="man/figures/README-unnamed-chunk-3-5.png" width="100%" />
-
-``` r
-
-mtcars$sample = as.logical(mtcars$gear == 4)
-fwl_plot(c(mpg, disp) ~ wt, mtcars, subset = ~sample, fsplit = ~cyl)
-```
-
-<img src="man/figures/README-unnamed-chunk-3-6.png" width="100%" />
-
-``` r
-
+# Using weights
 mtcars$w = runif(nrow(mtcars), 0.1, 0.9)
 fwl_plot(mpg ~ wt + hp, data = mtcars, weights = ~w)
 ```
 
-<img src="man/figures/README-unnamed-chunk-3-7.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-3-5.png" width="100%" />

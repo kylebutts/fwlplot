@@ -34,6 +34,8 @@ Here's a simple example with fixed effects removed by `fixest`.
 ```{r}
 library(fwlplot)
 library(fixest)
+library(ggplot2)
+theme_set(theme_minimal(base_size = 16))
 
 fwl_plot(mpg ~ hp, data = mtcars)
 fwl_plot(mpg ~ hp + wt | cyl, data = mtcars, vcov = "hc1")
@@ -42,18 +44,16 @@ fwl_plot(mpg ~ hp + wt | cyl, data = mtcars, vcov = "hc1")
 This is meant to (as much as possible) be a drop in replacement for `fixest::feols`. You should be able to replace `feols` with `fwl_plot` and get a plot.
 
 ```{r}
-library(ggplot2)
-theme_set(theme_minimal(base_size = 16))
-
-fwl_plot(mpg ~ wt, mtcars)
-fwl_plot(mpg ~ wt + hp | cyl, mtcars)
+# Fixest multi support
 fwl_plot(c(mpg, disp) ~ wt + hp, mtcars)
 fwl_plot(c(mpg, disp) ~ wt + hp, mtcars, split = ~cyl)
 fwl_plot(c(mpg, disp) ~ wt, mtcars, fsplit = ~cyl)
 
+# Using subset
 mtcars$sample = as.logical(mtcars$gear == 4)
-fwl_plot(c(mpg, disp) ~ wt, mtcars, subset = ~sample, fsplit = ~cyl)
+fwl_plot(c(mpg, disp) ~ wt, mtcars, subset = ~sample)
 
+# Using weights
 mtcars$w = runif(nrow(mtcars), 0.1, 0.9)
 fwl_plot(mpg ~ wt + hp, data = mtcars, weights = ~w)
 ```
