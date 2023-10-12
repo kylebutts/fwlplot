@@ -7,7 +7,7 @@
 #' @param ggplot Boolean. Default is to use base R plot but if TRUE, use ggplot.
 #' @param ... Additional arguments passed to `fixest::feols`.
 #' @examples
-#' if (interactive()) {
+#' \donttest{
 #'   fwl_plot(mpg ~ hp + wt | cyl, mtcars)
 #' }
 #' 
