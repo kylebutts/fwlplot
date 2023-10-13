@@ -5,7 +5,7 @@ Authors@R: c(
     person("Kyle", "Butts", , "kyle.butts@colorado.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-9048-8059"))
   )
-Description: Creates a scatter plot after residualizing using a set of covariates. The residuals are calculated using the 'fixest' package which allows very fast estimation that scales. Details of the (Yule-)Frisch-Waugh-Lovell theorem is given in Basu (2023) <arxiv:2307.00369>.
+Description: Creates a scatter plot after residualizing using a set of covariates. The residuals are calculated using the 'fixest' package which allows very fast estimation that scales. Details of the (Yule-)Frisch-Waugh-Lovell theorem is given in Basu (2023) <arXiv:2307.00369>.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

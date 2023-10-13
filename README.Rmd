@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-This is a super simple package to help make scatter plots of two variables after residualizing by covariates. This package uses `fixest` so things are super fast.
+This is a super simple package to help make scatter plots of two variables after residualizing by covariates. This package uses `fixest` so things are super fast. This is meant to (as much as possible) be a drop in replacement for `fixest::feols`. You should be able to replace `feols` with `fwl_plot` and get a plot.
 
 ## Installation
 
@@ -30,48 +30,86 @@ devtools::install_github("kylebutts/fwlplot")
 
 ## Example
 
-Here's a simple example with fixed effects removed by `fixest`.
+Here's a simple example with fixed effects removed by `fixest`. 
 ```{r}
 library(fwlplot)
 library(fixest)
+library(data.table)
 library(ggplot2)
-theme_set(theme_minimal(base_size = 16))
+theme_set(theme_light(base_size = 16))
+
+flights <- data.table::fread("https://raw.githubusercontent.com/Rdatatable/data.table/master/vignettes/flights14.csv")
+flights$long_distance = (flights$distance > 2000)
+# Sample 10000 rows
+sample = flights[sample(nrow(flights), 10000), ]
 
 # Without covariates = scatterplot
-fwl_plot(mpg ~ hp, data = mtcars)
+fwl_plot(dep_delay ~ air_time, data = sample)
 ```
 
 ```{r}
 # With covaraites = FWL'd scatterplot
-fwl_plot(mpg ~ hp + wt | cyl, data = mtcars, vcov = "hc1")
+fwl_plot(
+  dep_delay ~ air_time | origin + dest, 
+  data = sample, vcov = "hc1"
+)
 ```
 
-This is meant to (as much as possible) be a drop in replacement for `fixest::feols`. You should be able to replace `feols` with `fwl_plot` and get a plot.
+### Plot random sample
+
+If you have a large dataset, we can plot a sample of points with the `n_sample` argument. This determines the number of points *per plot* (see multiple estimation below).
+
+```{r}
+fwl_plot(
+  dep_delay ~ air_time | origin + dest, 
+  # Full dataset for estimation, 1000 obs. for plotting
+  data = flights, n_sample = 1000
+)
+```
+
+### Full `feols` compatability
+
+This is meant to be a 1:1 drop-in replacement with fixest, so everything should work by just replacing `feols` with 
+
+
+```{r}
+feols(
+  dep_delay ~ air_time | origin + dest, 
+  data = sample, subset = ~long_distance, cluster = ~origin
+)
+```
+```{r}
+fwl_plot(
+  dep_delay ~ air_time | origin + dest, 
+  data = sample, subset = ~long_distance, cluster = ~origin
+)
+```
+
+
+### Multiple estimation 
 
 ```{r}
 # Multiple y variables
-fwl_plot(c(mpg, disp) ~ wt + hp, mtcars)
+fwl_plot(
+  c(dep_delay, arr_delay) ~ air_time | origin + dest, 
+  data = sample
+)
 ```
 
 ```{r}
 # `split` sample
-fwl_plot(c(mpg, disp) ~ wt + hp, mtcars, split = ~cyl)
+fwl_plot(
+  c(dep_delay, arr_delay) ~ air_time | origin + dest, 
+  data = sample, split = ~long_distance
+)
 ```
 
 ```{r}
 # `fsplit` = `split` sample and Full sample
-fwl_plot(c(mpg, disp) ~ wt, mtcars, fsplit = ~cyl)
+fwl_plot(
+  c(dep_delay, arr_delay) ~ air_time | origin + dest, 
+  data = sample, fsplit = ~long_distance
+)
 ```
 
-```{r}
-# Using subset
-mtcars$sample = as.logical(mtcars$gear == 4)
-fwl_plot(c(mpg, disp) ~ wt, mtcars, subset = ~sample)
-```
-
-```{r}
-# Using weights
-mtcars$w = runif(nrow(mtcars), 0.1, 0.9)
-fwl_plot(mpg ~ wt + hp, data = mtcars, weights = ~w)
-```
 
