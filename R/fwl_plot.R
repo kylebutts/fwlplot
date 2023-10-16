@@ -221,6 +221,10 @@ is_theme_default <- function() {
 # Base R implementation
 plot_resids_base_r <- function(resids, x_var, y_vars, is_residualized) {
 
+  # Preserve user settings
+  oldpar <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(oldpar))
+
   # Needs to be in this order to output in the correct ordering for `par(mfcol)`
   resids_fitted <- split(resids, interaction(resids$var, resids$sample))
 
