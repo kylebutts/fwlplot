@@ -9,8 +9,9 @@ Description: Creates a scatter plot after residualizing using a set of covariate
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3.9000
+RoxygenNote: 7.3.1
 Imports: 
     data.table,
     fixest,
-    ggplot2
+    ggplot2,
+    tinyplot

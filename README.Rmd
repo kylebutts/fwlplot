@@ -9,6 +9,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
+  dpi = 400,
   out.width = "100%"
 )
 ```
@@ -42,12 +43,18 @@ flights <- data.table::fread("https://raw.githubusercontent.com/Rdatatable/data.
 flights$long_distance = (flights$distance > 2000)
 # Sample 10000 rows
 sample = flights[sample(nrow(flights), 10000), ]
+```
 
+```{r}
+#| fig.width:  8
+#| fig.height: 4
 # Without covariates = scatterplot
 fwl_plot(dep_delay ~ air_time, data = sample)
 ```
 
 ```{r}
+#| fig.width:  8
+#| fig.height: 4
 # With covaraites = FWL'd scatterplot
 fwl_plot(
   dep_delay ~ air_time | origin + dest, 
@@ -60,6 +67,8 @@ fwl_plot(
 If you have a large dataset, we can plot a sample of points with the `n_sample` argument. This determines the number of points *per plot* (see multiple estimation below).
 
 ```{r}
+#| fig.width:  8
+#| fig.height: 4
 fwl_plot(
   dep_delay ~ air_time | origin + dest, 
   # Full dataset for estimation, 1000 obs. for plotting
@@ -73,12 +82,16 @@ This is meant to be a 1:1 drop-in replacement with fixest, so everything should 
 
 
 ```{r}
+#| fig.width:  8
+#| fig.height: 4
 feols(
   dep_delay ~ air_time | origin + dest, 
   data = sample, subset = ~long_distance, cluster = ~origin
 )
 ```
 ```{r}
+#| fig.width:  8
+#| fig.height: 4
 fwl_plot(
   dep_delay ~ air_time | origin + dest, 
   data = sample, subset = ~long_distance, cluster = ~origin
@@ -89,6 +102,8 @@ fwl_plot(
 ### Multiple estimation 
 
 ```{r}
+#| fig.width:  8
+#| fig.height: 4
 # Multiple y variables
 fwl_plot(
   c(dep_delay, arr_delay) ~ air_time | origin + dest, 
@@ -97,19 +112,36 @@ fwl_plot(
 ```
 
 ```{r}
+#| fig.width:  8
+#| fig.height: 6
 # `split` sample
 fwl_plot(
   c(dep_delay, arr_delay) ~ air_time | origin + dest, 
-  data = sample, split = ~long_distance
+  data = sample, split = ~long_distance, n_sample = 1000
 )
 ```
 
 ```{r}
+#| fig.width:  8
+#| fig.height: 10
 # `fsplit` = `split` sample and Full sample
 fwl_plot(
   c(dep_delay, arr_delay) ~ air_time | origin + dest, 
-  data = sample, fsplit = ~long_distance
+  data = sample, fsplit = ~long_distance, n_sample = 1000
 )
+```
+
+### ggplot2
+
+```{r}
+#| fig.width:  8
+#| fig.height: 10
+p = fwl_plot(
+  c(dep_delay, arr_delay) ~ air_time | origin + dest, 
+  data = sample, fsplit = ~long_distance, 
+  n_sample = 1000, ggplot = TRUE
+)
+p + theme_grey(base_size = 15)
 ```
 
 

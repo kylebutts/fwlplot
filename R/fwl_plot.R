@@ -16,7 +16,7 @@
 #' @return Either NULL if `ggplot = FALSE` or a ggplot object if `ggplot = TRUE`.
 #'
 #' @export
-fwl_plot <- function(fml, data, ggplot = FALSE, n_sample = NULL, ...) {
+fwl_plot <- function(fml, data, ggplot = FALSE, n_sample = 1000, ...) {
   pt_est <- fixest::feols(
     fml, data,
     notes = FALSE, ...
@@ -64,24 +64,14 @@ fwl_plot <- function(fml, data, ggplot = FALSE, n_sample = NULL, ...) {
   )
   fixest::setFixest_fml(..fwl_plot_outcomes = outcome_fml)
 
-
-  ## Create formula ------------------------------------------------------------
   if (has_w & has_fe) {
-    fml_new <- fixest::xpd(
-      ..fwl_plot_outcomes ~ ..fwl_plot_w | ..fwl_plot_FE
-    )
+    fml_new <- fixest::xpd(..fwl_plot_outcomes ~ ..fwl_plot_w | ..fwl_plot_FE)
   } else if (has_fe) {
-    fml_new <- fixest::xpd(
-      ..fwl_plot_outcomes ~ 1 | ..fwl_plot_FE
-    )
+    fml_new <- fixest::xpd(..fwl_plot_outcomes ~ 1 | ..fwl_plot_FE)
   } else if (has_w) {
-    fml_new <- fixest::xpd(
-      ..fwl_plot_outcomes ~ ..fwl_plot_w
-    )
+    fml_new <- fixest::xpd(..fwl_plot_outcomes ~ ..fwl_plot_w)
   } else {
-    fml_new <- fixest::xpd(
-      ..fwl_plot_outcomes ~ 0
-    )
+    fml_new <- fixest::xpd(..fwl_plot_outcomes ~ 0)
   }
 
   ## Residualize ---------------------------------------------------------------
@@ -220,106 +210,37 @@ is_theme_default <- function() {
 
 # Base R implementation
 plot_resids_base_r <- function(resids, x_var, y_vars, is_residualized) {
-
-  # Preserve user settings
-  oldpar <- graphics::par(no.readonly = TRUE)
-  on.exit(graphics::par(oldpar))
-
-  # Needs to be in this order to output in the correct ordering for `par(mfcol)`
-  resids_fitted <- split(resids, interaction(resids$var, resids$sample))
-
-  # Get ranges for plots
-  split <- split(resids, resids$var)
-  x_range <- range(resids$x_resid)
-  y_range <- lapply(split, function(df) range(df$y_resid) * 1.05)
-
-  # Setup facets
-  n_vars <- length(unique(resids$var))
-  n_samples <- length(unique(resids$sample))
-  if (n_samples == 1 & n_vars > 1) {
-    facets <- c(1, n_vars)
+  y_lab = ""
+  x_lab = ifelse(is_residualized, paste0("Residualized ", x_var), x_var)
+  n_unique_var = length(unique(resids$var))
+  n_unique_sample = length(unique(resids$sample))
+   
+  if (n_unique_var > 1 & n_unique_sample > 1) {
+    facet_fml = var ~ sample
+  } else if (n_unique_var > 1) {
+    facet_fml = ~ var
+  } else if (n_unique_sample > 1) {
+    facet_fml = ~ sample
   } else {
-    facets <- c(n_vars, n_samples)
+    facet_fml = NULL
+    y_lab = ifelse(is_residualized, paste0("Residualized ", y_vars), y_vars)
   }
-  n_facets <- Reduce(`*`, facets)
-  graphics::par(
-    mfcol = facets,
-    ps = 12,
-    # c(b, l, t, r)
-    oma = c(0, 0, 1, 0)
+
+  if (is_residualized) {
+    resids$var <- paste0("Residualized ", resids$var)
+  }
+
+  tinyplot::tinyplot(
+    x = resids$x_resid, y = resids$y_resid,
+    facet = facet_fml,
+    data = resids, 
+    ylab = y_lab, 
+    xlab = x_lab
   )
-
-  # Start plotting each grid
-  for (i in seq_along(resids_fitted)) {
-    df <- resids_fitted[[i]]
-    df <- df[order(df$x_resid), ]
-    outcome_var <- df$var[1]
-
-    # Custom margins for each plot
-    this_row <- ((i - 1) %% facets[1]) + 1
-    this_col <- ceiling(i / facets[1])
-
-    # Setup margins
-    mar_t <- 1
-    mar_b <- 1
-    mar_l <- 1
-    mar_r <- 0
-    if (this_row == 1) {
-      if (n_samples > 1) {
-        mar_t <- 4
-      } else {
-        mar_t <- 1
-      }
-    }
-    if (this_col == 1 | n_samples == 1) {
-      mar_l <- 4
-    }
-    if (n_samples == 1 & n_vars > 1) {
-      mar_r <- 1
-    }
-    if (this_row == facets[1]) {
-      mar_b <- 4
-    }
-    graphics::par(mar = c(mar_b, mar_l, mar_t, mar_r))
-
-    # Plot points
-    graphics::plot(
-      x = df$x_resid, y = df$y_resid, pch = 16,
-      xlim = x_range, ylim = y_range[[outcome_var]],
-      # frame.plot = FALSE,
-      axes = FALSE,
-      xlab = "", ylab = "",
-      panel.first = {
-        graphics::grid()
-        graphics::box()
-      }
-    )
-
-    # best of fit line and CI
-    graphics::polygon(
-      c(df$x_resid, rev(df$x_resid)), c(df$lwr, rev(df$upr)),
-      col = grDevices::adjustcolor("gray", 0.3), border = NA
-    )
-    graphics::lines(df$x_resid, y = df$fit, lwd = 2, col = "darkgreen")
-
-    # Setup axis and sample labels
-    add_x_axis <- (this_row == facets[1])
-    add_y_axis <- (this_col == 1 | n_samples == 1)
-    add_facet_label <- (this_row == 1 & n_samples > 1)
-
-    if (add_x_axis) {
-      graphics::axis(1, lty = 0)
-      graphics::title(xlab = paste0("Residualized ", x_var))
-    }
-    if (add_y_axis) {
-      graphics::axis(2, lty = 0, las = 1)
-      graphics::title(ylab = paste0("Residualized ", outcome_var))
-    }
-    if (add_facet_label) {
-      graphics::mtext(
-        sub(".*\\.", "", names(resids_fitted))[i],
-        side = 3
-      )
-    }
-  }
+  tinyplot::tinyplot(
+    x = resids$x_resid, ymin = resids$lwr, ymax = resids$upr,
+    facet = facet_fml,
+    data = resids, 
+    type = "ribbon", add = TRUE
+  )
 }

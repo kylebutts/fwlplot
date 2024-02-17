@@ -29,19 +29,20 @@ library(fwlplot)
 library(fixest)
 library(data.table)
 library(ggplot2)
-#> Warning: package 'ggplot2' was built under R version 4.3.1
 theme_set(theme_light(base_size = 16))
 
 flights <- data.table::fread("https://raw.githubusercontent.com/Rdatatable/data.table/master/vignettes/flights14.csv")
 flights$long_distance = (flights$distance > 2000)
 # Sample 10000 rows
 sample = flights[sample(nrow(flights), 10000), ]
+```
 
+``` r
 # Without covariates = scatterplot
 fwl_plot(dep_delay ~ air_time, data = sample)
 ```
 
-<img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
 
 ``` r
 # With covaraites = FWL'd scatterplot
@@ -51,7 +52,7 @@ fwl_plot(
 )
 ```
 
-<img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-4-1.png" width="100%" />
 
 ### Plot random sample
 
@@ -67,7 +68,7 @@ fwl_plot(
 )
 ```
 
-<img src="man/figures/README-unnamed-chunk-4-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
 
 ### Full `feols` compatability
 
@@ -80,16 +81,16 @@ feols(
   data = sample, subset = ~long_distance, cluster = ~origin
 )
 #> OLS estimation, Dep. Var.: dep_delay
-#> Observations: 1,742 
+#> Observations: 1,717 
 #> Subset: long_distance 
-#> Fixed-effects: origin: 2,  dest: 16
+#> Fixed-effects: origin: 2,  dest: 14
 #> Standard-errors: Clustered (origin) 
-#>          Estimate Std. Error t value Pr(>|t|) 
-#> air_time 0.093106   0.092359 1.00808  0.49744 
+#>           Estimate Std. Error   t value Pr(>|t|) 
+#> air_time -0.016646   0.100526 -0.165591  0.89553 
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-#> RMSE: 35.2     Adj. R2: 0.003127
-#>              Within R2: 0.00175
+#> RMSE: 42.1     Adj. R2: 0.010301
+#>              Within R2: 3.934e-5
 ```
 
 ``` r
@@ -99,7 +100,7 @@ fwl_plot(
 )
 ```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
 
 ### Multiple estimation
 
@@ -111,24 +112,37 @@ fwl_plot(
 )
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
 
 ``` r
 # `split` sample
 fwl_plot(
   c(dep_delay, arr_delay) ~ air_time | origin + dest, 
-  data = sample, split = ~long_distance
+  data = sample, split = ~long_distance, n_sample = 1000
 )
 ```
 
-<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
 
 ``` r
 # `fsplit` = `split` sample and Full sample
 fwl_plot(
   c(dep_delay, arr_delay) ~ air_time | origin + dest, 
-  data = sample, fsplit = ~long_distance
+  data = sample, fsplit = ~long_distance, n_sample = 1000
 )
 ```
 
-<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+
+### ggplot2
+
+``` r
+p = fwl_plot(
+  c(dep_delay, arr_delay) ~ air_time | origin + dest, 
+  data = sample, fsplit = ~long_distance, 
+  n_sample = 1000, ggplot = TRUE
+)
+p + theme_grey(base_size = 15)
+```
+
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />

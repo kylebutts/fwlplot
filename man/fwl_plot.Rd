@@ -5,9 +5,9 @@
 \alias{fwlplot}
 \title{FWL Plot}
 \usage{
-fwl_plot(fml, data, ggplot = FALSE, n_sample = NULL, ...)
+fwl_plot(fml, data, ggplot = FALSE, n_sample = 1000, ...)
 
-fwlplot(fml, data, ggplot = FALSE, n_sample = NULL, ...)
+fwlplot(fml, data, ggplot = FALSE, n_sample = 1000, ...)
 }
 \arguments{
 \item{fml}{Of the form \code{y ~ x + covs | fes} following the fixest formula syntax. The x variable you want plotted should come first.}
