@@ -111,6 +111,10 @@ fwlplot <- fwl_plot
 
 # ggplot2 implementation
 plot_resids_ggplot <- function(resids, x_var, y_vars, is_residualized) {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("The option `ggplot = TRUE` was used, but `ggplot2` is not installed")
+  }
+
   # Fix: "no visibile binding for global variable"
   var <- x_resid <- y_resid <- fit <- lwr <- upr <- NULL
 

@@ -27,9 +27,6 @@ Here’s a simple example with fixed effects removed by `fixest`.
 ``` r
 library(fwlplot)
 library(fixest)
-library(data.table)
-library(ggplot2)
-theme_set(theme_light(base_size = 16))
 
 flights <- data.table::fread("https://raw.githubusercontent.com/Rdatatable/data.table/master/vignettes/flights14.csv")
 flights$long_distance = (flights$distance > 2000)
@@ -81,16 +78,16 @@ feols(
   data = sample, subset = ~long_distance, cluster = ~origin
 )
 #> OLS estimation, Dep. Var.: dep_delay
-#> Observations: 1,717 
+#> Observations: 1,769 
 #> Subset: long_distance 
-#> Fixed-effects: origin: 2,  dest: 14
+#> Fixed-effects: origin: 2,  dest: 15
 #> Standard-errors: Clustered (origin) 
-#>           Estimate Std. Error   t value Pr(>|t|) 
-#> air_time -0.016646   0.100526 -0.165591  0.89553 
+#>          Estimate Std. Error  t value Pr(>|t|) 
+#> air_time 0.054298   0.161423 0.336374  0.79343 
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-#> RMSE: 42.1     Adj. R2: 0.010301
-#>              Within R2: 3.934e-5
+#> RMSE: 45.1     Adj. R2: 0.009314
+#>              Within R2: 3.622e-4
 ```
 
 ``` r
@@ -137,12 +134,13 @@ fwl_plot(
 ### ggplot2
 
 ``` r
-p = fwl_plot(
+library(ggplot2)
+theme_set(theme_grey(base_size = 16))
+fwl_plot(
   c(dep_delay, arr_delay) ~ air_time | origin + dest, 
   data = sample, fsplit = ~long_distance, 
   n_sample = 1000, ggplot = TRUE
 )
-p + theme_grey(base_size = 15)
 ```
 
 <img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
