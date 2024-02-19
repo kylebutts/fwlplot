@@ -78,16 +78,16 @@ feols(
   data = sample, subset = ~long_distance, cluster = ~origin
 )
 #> OLS estimation, Dep. Var.: dep_delay
-#> Observations: 1,769 
+#> Observations: 1,723 
 #> Subset: long_distance 
-#> Fixed-effects: origin: 2,  dest: 15
+#> Fixed-effects: origin: 2,  dest: 14
 #> Standard-errors: Clustered (origin) 
-#>          Estimate Std. Error  t value Pr(>|t|) 
-#> air_time 0.054298   0.161423 0.336374  0.79343 
+#>          Estimate Std. Error t value Pr(>|t|)    
+#> air_time 0.190664   0.021643 8.80955 0.071957 .  
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-#> RMSE: 45.1     Adj. R2: 0.009314
-#>              Within R2: 3.622e-4
+#> RMSE: 41.6     Adj. R2: 0.009444
+#>              Within R2: 0.005488
 ```
 
 ``` r

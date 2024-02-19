@@ -242,7 +242,8 @@ plot_resids_base_r <- function(resids, x_var, y_vars, is_residualized) {
     xlab = x_lab
   )
   tinyplot::tinyplot(
-    x = resids$x_resid, ymin = resids$lwr, ymax = resids$upr,
+    x = resids$x_resid, y = resids$fit,
+    ymin = resids$lwr, ymax = resids$upr,
     facet = facet_fml,
     data = resids, 
     type = "ribbon", add = TRUE
