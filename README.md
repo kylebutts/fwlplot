@@ -29,9 +29,9 @@ library(fwlplot)
 library(fixest)
 
 flights <- data.table::fread("https://raw.githubusercontent.com/Rdatatable/data.table/master/vignettes/flights14.csv")
-flights$long_distance = (flights$distance > 2000)
+flights$long_distance <- (flights$distance > 2000)
 # Sample 10000 rows
-sample = flights[sample(nrow(flights), 10000), ]
+sample <- flights[sample(nrow(flights), 10000), ]
 ```
 
 ``` r
@@ -44,7 +44,7 @@ fwl_plot(dep_delay ~ air_time, data = sample)
 ``` r
 # With covaraites = FWL'd scatterplot
 fwl_plot(
-  dep_delay ~ air_time | origin + dest, 
+  dep_delay ~ air_time | origin + dest,
   data = sample, vcov = "hc1"
 )
 ```
@@ -59,7 +59,7 @@ If you have a large dataset, we can plot a sample of points with the
 
 ``` r
 fwl_plot(
-  dep_delay ~ air_time | origin + dest, 
+  dep_delay ~ air_time | origin + dest,
   # Full dataset for estimation, 1000 obs. for plotting
   data = flights, n_sample = 1000
 )
@@ -74,25 +74,25 @@ should work by just replacing `feols` with
 
 ``` r
 feols(
-  dep_delay ~ air_time | origin + dest, 
+  dep_delay ~ air_time | origin + dest,
   data = sample, subset = ~long_distance, cluster = ~origin
 )
 #> OLS estimation, Dep. Var.: dep_delay
-#> Observations: 1,723 
-#> Subset: long_distance 
-#> Fixed-effects: origin: 2,  dest: 14
+#> Observations: 1,813
+#> Subset: long_distance
+#> Fixed-effects: origin: 2,  dest: 15
 #> Standard-errors: Clustered (origin) 
-#>          Estimate Std. Error t value Pr(>|t|)    
-#> air_time 0.190664   0.021643 8.80955 0.071957 .  
+#>          Estimate Std. Error  t value Pr(>|t|) 
+#> air_time  0.02462   0.085093 0.289332   0.8207 
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-#> RMSE: 41.6     Adj. R2: 0.009444
-#>              Within R2: 0.005488
+#> RMSE: 41.9     Adj. R2: 0.007301
+#>              Within R2: 8.795e-5
 ```
 
 ``` r
 fwl_plot(
-  dep_delay ~ air_time | origin + dest, 
+  dep_delay ~ air_time | origin + dest,
   data = sample, subset = ~long_distance, cluster = ~origin
 )
 ```
@@ -104,7 +104,7 @@ fwl_plot(
 ``` r
 # Multiple y variables
 fwl_plot(
-  c(dep_delay, arr_delay) ~ air_time | origin + dest, 
+  c(dep_delay, arr_delay) ~ air_time | origin + dest,
   data = sample
 )
 ```
@@ -114,7 +114,7 @@ fwl_plot(
 ``` r
 # `split` sample
 fwl_plot(
-  c(dep_delay, arr_delay) ~ air_time | origin + dest, 
+  c(dep_delay, arr_delay) ~ air_time | origin + dest,
   data = sample, split = ~long_distance, n_sample = 1000
 )
 ```
@@ -124,7 +124,7 @@ fwl_plot(
 ``` r
 # `fsplit` = `split` sample and Full sample
 fwl_plot(
-  c(dep_delay, arr_delay) ~ air_time | origin + dest, 
+  c(dep_delay, arr_delay) ~ air_time | origin + dest,
   data = sample, fsplit = ~long_distance, n_sample = 1000
 )
 ```
@@ -137,8 +137,8 @@ fwl_plot(
 library(ggplot2)
 theme_set(theme_grey(base_size = 16))
 fwl_plot(
-  c(dep_delay, arr_delay) ~ air_time | origin + dest, 
-  data = sample, fsplit = ~long_distance, 
+  c(dep_delay, arr_delay) ~ air_time | origin + dest,
+  data = sample, fsplit = ~long_distance,
   n_sample = 1000, ggplot = TRUE
 )
 ```
