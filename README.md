@@ -14,10 +14,17 @@ drop in replacement for `fixest::feols`. You should be able to replace
 
 ## Installation
 
-You can install the development version of fwlplot like so:
+The stable version of `fwlplot` is available on CRAN.
 
 ``` r
-devtools::install_github("kylebutts/fwlplot")
+install.packages("fwlplot")
+```
+
+Or, you can grab the latest development version from GitHub.
+
+``` r
+# install.packages("remotes")
+remotes::install_github("kylebutts/fwlplot")
 ```
 
 ## Example
@@ -29,9 +36,9 @@ library(fwlplot)
 library(fixest)
 
 flights <- data.table::fread("https://raw.githubusercontent.com/Rdatatable/data.table/master/vignettes/flights14.csv")
-flights$long_distance <- (flights$distance > 2000)
+flights[, long_distance := distance > 2000]
 # Sample 10000 rows
-sample <- flights[sample(nrow(flights), 10000), ]
+sample <- flights[sample(.N, 10000)]
 ```
 
 ``` r
@@ -78,16 +85,16 @@ feols(
   data = sample, subset = ~long_distance, cluster = ~origin
 )
 #> OLS estimation, Dep. Var.: dep_delay
-#> Observations: 1,813
+#> Observations: 1,719
 #> Subset: long_distance
-#> Fixed-effects: origin: 2,  dest: 15
+#> Fixed-effects: origin: 2,  dest: 16
 #> Standard-errors: Clustered (origin) 
-#>          Estimate Std. Error  t value Pr(>|t|) 
-#> air_time  0.02462   0.085093 0.289332   0.8207 
+#>          Estimate Std. Error t value Pr(>|t|) 
+#> air_time 0.071599   0.043164 1.65878  0.34537 
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-#> RMSE: 41.9     Adj. R2: 0.007301
-#>              Within R2: 8.795e-5
+#> RMSE: 41.0     Adj. R2: 0.003849
+#>              Within R2: 7.185e-4
 ```
 
 ``` r
