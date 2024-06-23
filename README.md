@@ -49,7 +49,7 @@ fwl_plot(dep_delay ~ air_time, data = sample)
 <img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
 
 ``` r
-# With covaraites = FWL'd scatterplot
+# With covariates = FWL'd scatterplot
 fwl_plot(
   dep_delay ~ air_time | origin + dest,
   data = sample, vcov = "hc1"
@@ -85,16 +85,16 @@ feols(
   data = sample, subset = ~long_distance, cluster = ~origin
 )
 #> OLS estimation, Dep. Var.: dep_delay
-#> Observations: 1,719
+#> Observations: 1,738
 #> Subset: long_distance
-#> Fixed-effects: origin: 2,  dest: 16
+#> Fixed-effects: origin: 2,  dest: 15
 #> Standard-errors: Clustered (origin) 
-#>          Estimate Std. Error t value Pr(>|t|) 
-#> air_time 0.071599   0.043164 1.65878  0.34537 
+#>          Estimate Std. Error  t value Pr(>|t|) 
+#> air_time 0.013261   0.122372 0.108369  0.93128 
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-#> RMSE: 41.0     Adj. R2: 0.003849
-#>              Within R2: 7.185e-4
+#> RMSE: 43.6     Adj. R2: -0.001756
+#>              Within R2:  2.333e-5
 ```
 
 ``` r

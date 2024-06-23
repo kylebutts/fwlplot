@@ -59,7 +59,7 @@ fwl_plot(dep_delay ~ air_time, data = sample)
 ```{r}
 #| fig.width:  8
 #| fig.height: 4
-# With covaraites = FWL'd scatterplot
+# With covariates = FWL'd scatterplot
 fwl_plot(
   dep_delay ~ air_time | origin + dest,
   data = sample, vcov = "hc1"
@@ -68,7 +68,9 @@ fwl_plot(
 
 ### Plot random sample
 
-If you have a large dataset, we can plot a sample of points with the `n_sample` argument. This determines the number of points *per plot* (see multiple estimation below).
+If you have a large dataset, we can plot a sample of points with the `n_sample`
+argument. This determines the number of points *per plot* (see multiple
+estimation below).
 
 ```{r}
 #| fig.width:  8
@@ -82,7 +84,8 @@ fwl_plot(
 
 ### Full `feols` compatability
 
-This is meant to be a 1:1 drop-in replacement with fixest, so everything should work by just replacing `feols` with 
+This is meant to be a 1:1 drop-in replacement with fixest, so everything should
+work by just replacing `feols` with 
 
 
 ```{r}
