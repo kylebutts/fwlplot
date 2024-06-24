@@ -6,6 +6,7 @@
 #' @param data A `dataframe` object that contains the variables in `fml`.
 #' @param ggplot Boolean. Default is to use base R plot but if TRUE, use ggplot.
 #' @param n_sample Numeric. Number of observations to sample for each facet.
+#' @param alpha Numeric. Alpha transparency of each individual point.
 #'  If NULL, will plot all rows.
 #' @param ... Additional arguments passed to `fixest::feols`.
 #' @examples
@@ -16,7 +17,7 @@
 #' @return Either NULL if `ggplot = FALSE` or a ggplot object if `ggplot = TRUE`.
 #'
 #' @export
-fwl_plot <- function(fml, data, ggplot = FALSE, n_sample = 1000, ...) {
+fwl_plot <- function(fml, data, ggplot = FALSE, n_sample = 1000, alpha = 0.5, ...) {
   pt_est <- fixest::feols(
     fml, data,
     notes = FALSE, ...
@@ -90,13 +91,15 @@ fwl_plot <- function(fml, data, ggplot = FALSE, n_sample = 1000, ...) {
   if (ggplot == FALSE) {
     plot_resids_base_r(
       resids, x_var, y_vars,
-      is_residualized = should_run_reg
+      is_residualized = should_run_reg,
+      alpha = alpha
     )
     invisible(NULL)
   } else {
     plot <- plot_resids_ggplot(
       resids, x_var, y_vars,
-      is_residualized = should_run_reg
+      is_residualized = should_run_reg,
+      alpha = alpha
     )
     return(plot)
   }
@@ -107,7 +110,7 @@ fwl_plot <- function(fml, data, ggplot = FALSE, n_sample = 1000, ...) {
 fwlplot <- fwl_plot
 
 # ggplot2 implementation
-plot_resids_ggplot <- function(resids, x_var, y_vars, is_residualized) {
+plot_resids_ggplot <- function(resids, x_var, y_vars, is_residualized, alpha = 1) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("The option `ggplot = TRUE` was used, but `ggplot2` is not installed")
   }
@@ -188,7 +191,8 @@ plot_resids_ggplot <- function(resids, x_var, y_vars, is_residualized) {
     ggplot2::geom_point(
       mapping = ggplot2::aes(
         x = x_resid, y = y_resid
-      )
+      ),
+      alpha = alpha
     ) +
     facet +
     ggplot2::labs(
@@ -210,7 +214,7 @@ is_theme_default <- function() {
 }
 
 # Base R implementation
-plot_resids_base_r <- function(resids, x_var, y_vars, is_residualized) {
+plot_resids_base_r <- function(resids, x_var, y_vars, is_residualized, alpha = 1) {
   y_lab = ""
   x_lab = ifelse(is_residualized, paste0("Residualized ", x_var), x_var)
   n_unique_var = length(unique(resids$var))
@@ -231,19 +235,28 @@ plot_resids_base_r <- function(resids, x_var, y_vars, is_residualized) {
     resids$var <- paste0("Residualized ", resids$var)
   }
 
-  tinyplot::tinyplot(
-    x = resids$x_resid, y = resids$y_resid,
-    facet = facet_fml,
-    data = resids, 
-    ylab = y_lab, 
-    xlab = x_lab
+  with(
+    resids,
+    tinyplot::tinyplot(
+      y_resid ~ x_resid,
+      facet = facet_fml,
+      ylab = y_lab,
+      xlab = x_lab,
+      pch = 19,
+      alpha = alpha,
+      grid = TRUE#, frame = FALSE
+    )
   )
-  tinyplot::tinyplot(
-    x = resids$x_resid, y = resids$fit,
-    ymin = resids$lwr, ymax = resids$upr,
-    facet = facet_fml,
-    data = resids, 
-    type = "ribbon", add = TRUE
+  with(
+    resids,
+    tinyplot::tinyplot(
+      fit ~ x_resid,
+      ymin = lwr, ymax = upr,
+      facet = facet_fml,
+      type = "ribbon",
+      col = "darkcyan", fill = "darkcyan",
+      add = TRUE
+    )
   )
 }
 

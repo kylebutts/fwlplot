@@ -9,7 +9,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  dpi = 400,
+  dpi = 300,
   out.width = "100%"
 )
 ```
@@ -23,10 +23,17 @@ This is a super simple package to help make scatter plots of two variables after
 
 ## Installation
 
-You can install the development version of fwlplot like so:
+The stable version of `fwlplot` is available on CRAN.
 
 ``` r
-devtools::install_github("kylebutts/fwlplot")
+install.packages("fwlplot")
+```
+
+Or, you can grab the latest development version from GitHub.
+
+``` r
+# install.packages("remotes")
+remotes::install_github("kylebutts/fwlplot")
 ```
 
 ## Example
@@ -37,9 +44,9 @@ library(fwlplot)
 library(fixest)
 
 flights <- data.table::fread("https://raw.githubusercontent.com/Rdatatable/data.table/master/vignettes/flights14.csv")
-flights$long_distance <- (flights$distance > 2000)
+flights[, long_distance := distance > 2000]
 # Sample 10000 rows
-sample <- flights[sample(nrow(flights), 10000), ]
+sample <- flights[sample(.N, 10000)]
 ```
 
 ```{r}
@@ -52,7 +59,7 @@ fwl_plot(dep_delay ~ air_time, data = sample)
 ```{r}
 #| fig.width:  8
 #| fig.height: 4
-# With covaraites = FWL'd scatterplot
+# With covariates = FWL'd scatterplot
 fwl_plot(
   dep_delay ~ air_time | origin + dest,
   data = sample, vcov = "hc1"
@@ -61,7 +68,9 @@ fwl_plot(
 
 ### Plot random sample
 
-If you have a large dataset, we can plot a sample of points with the `n_sample` argument. This determines the number of points *per plot* (see multiple estimation below).
+If you have a large dataset, we can plot a sample of points with the `n_sample`
+argument. This determines the number of points *per plot* (see multiple
+estimation below).
 
 ```{r}
 #| fig.width:  8
@@ -75,7 +84,8 @@ fwl_plot(
 
 ### Full `feols` compatability
 
-This is meant to be a 1:1 drop-in replacement with fixest, so everything should work by just replacing `feols` with 
+This is meant to be a 1:1 drop-in replacement with fixest, so everything should
+work by just replacing `feols` with 
 
 
 ```{r}
