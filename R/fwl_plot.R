@@ -127,7 +127,7 @@ plot_resids_ggplot <- function(resids, x_var, y_vars, is_residualized, alpha = 1
   }
 
   # Setup stuff
-  has_multi_y <- (nrow(resids) > 1)
+  has_multi_y <- (ncol(resids) > 1)
   has_split <- (resids[1, "sample"] != "")
   facet <- NULL
   if (has_multi_y & has_split) {
